@@ -1,0 +1,67 @@
+function speechrecognition1(filename)
+    clc;
+    close all;
+    
+    voice = audioread(filename); %reading the audio file
+    x = voice;
+    x = x'; % Transpose the audio file
+    x = x(1,:);
+    x = x';
+    
+    audio = strsplit('first.mp4 second.mp4 third.mp4 fourth.mp4 fifth.mp4'); % List of audio files
+    a = [];
+    for i = 1:length(audio)
+        currentAudio = audio{i}; % Store current audio file name
+        y1 = audioread(currentAudio);
+        y1 = y1';
+        y1 = y1(1,:);
+        y1 = y1';
+        z1 = xcorr(x, y1); % Calculating cross-correlation
+        a = [a, max(z1)];
+        l1 = length(z1); % Calculate length
+        t1 = -((l1-1)/2):1:((l1-1)/2);
+        t1 = t1';
+        figure;
+        plot(t1, z1);
+        title(sprintf('Correlation with %s', currentAudio));
+        xlabel('Lag');
+        ylabel('Correlation');
+        fprintf('Maximum correlation with %s: %.4f\n', currentAudio, max(z1));
+    end
+    
+    m = max(a);
+    disp(['The maximum correlation value (m) is: ', num2str(m)]);
+    
+    h = audioread('allow.mp4');
+    
+    m1 = a(1);
+    m2 = a(2);
+    m3 = a(3);
+    m4 = a(4);
+    m5 = a(5);
+    
+    if m <= 1
+        soundsc(audioread('first.mp4'), 50000);
+        soundsc(h, 50000);
+        disp("system unlocked");
+    elseif m <= m2
+        soundsc(audioread('second.mp4'), 50000);
+        soundsc(h, 50000);
+        disp("system unlocked");
+    elseif m <= m3
+        soundsc(audioread('third.mp4'), 50000);
+        soundsc(h, 50000);
+        disp("system unlocked");
+    elseif m <= m4
+        soundsc(audioread('fourth.mp4'), 50000);
+        soundsc(h, 50000);
+        disp("system unlocked");
+    elseif m <= m5
+        soundsc(audioread('fifth.mp4'), 50000);
+        soundsc(h, 50000);
+        disp("system unlocked");
+    else
+        soundsc(audioread('Denied.mp4'), 50000);
+        disp('access denied');
+    end
+end
