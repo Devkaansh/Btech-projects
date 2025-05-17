@@ -1,0 +1,90 @@
+#include <WiFi.h>
+#include <ThingSpeak.h>
+#include <NewPing.h>
+
+const char* ssid = "AndroidAP";
+const char* password = "incorrect";
+
+unsigned long channelID = 2814226;
+const char* writeAPIKey = "PCWM2E8OJH94Q0UN";
+WiFiClient client;
+
+#define IN1 12
+#define IN2 14
+#define IN3 27
+#define IN4 26
+
+#define TRIG_PIN 5
+#define ECHO_PIN 18
+#define PIR_PIN 4
+
+NewPing sonar(TRIG_PIN, ECHO_PIN, 200);
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  pinMode(PIR_PIN, INPUT);
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500); Serial.print(".");
+  }
+  Serial.println("WiFi connected");
+
+  ThingSpeak.begin(client);
+}
+
+void loop() {
+  
+  moveForward();
+
+  int distance = sonar.ping_cm();
+  Serial.print("Distance: "); Serial.println(distance);
+  if (distance > 0 && distance < 20) {
+    stopMotors();
+    Serial.println("Obstacle detected!");
+    delay(1000);
+    turnRight();  // simple obstacle avoidance
+    delay(1000);
+  }
+
+  int humanDetected = digitalRead(PIR_PIN);
+  if (humanDetected == HIGH) {
+    Serial.println("Intruder detected!");
+
+    ThingSpeak.setField(1, "Intruder Detected");
+    ThingSpeak.writeFields(channelID, writeAPIKey);
+
+    stopMotors();
+    delay(5000); // Wait for 5s before resuming
+  }
+
+  delay(200);
+}
+
+// Motor control functions
+void moveForward() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+}
+
+void stopMotors() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+}
+
+void turnRight() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+}
