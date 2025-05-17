@@ -1,0 +1,54 @@
+#include <WiFi.h>
+#include <ThingSpeak.h>
+
+const char* ssid = "AndroidAP";
+const char* password = "incorrect";
+
+const char* host = "api.thingspeak.com";
+unsigned long channelID = 2814226;
+const char* writeAPIKey = "PCWM2E8OJH94Q0UN";
+
+WiFiClient client;
+
+#define PIR_PIN 13 
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PIR_PIN, INPUT);
+
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println(" Connected!");
+
+  ThingSpeak.begin(client);
+}
+
+void loop() {
+  int motionDetected = digitalRead(PIR_PIN);
+
+  if (motionDetected == HIGH) {
+    Serial.println("Motion detected! Sending alert...");
+
+    // Send value to ThingSpeak
+    ThingSpeak.setField(1, 1);  // Motion detected
+    int x = ThingSpeak.writeFields(channelID, writeAPIKey);
+
+    if (x == 200) {
+      Serial.println("Data sent to ThingSpeak successfully.");
+    } else {
+      Serial.print("Failed to send data. HTTP error code: ");
+      Serial.println(x);
+    }
+
+    delay(10000);  
+  } else {
+    Serial.println("No motion.");
+    ThingSpeak.setField(1, 0);
+    ThingSpeak.writeFields(channelID, writeAPIKey);
+    delay(10000);
+  }
+}
