@@ -1,1 +1,31 @@
+const int PIR_PIN = 2;           
+const int ULTRASONIC_PIN = 3;    
+const int SOLENOID_PIN = 4;      
+
+void setup() {
+  pinMode(PIR_PIN, INPUT);
+  pinMode(ULTRASONIC_PIN, OUTPUT);
+  pinMode(SOLENOID_PIN, OUTPUT);
+
+  digitalWrite(ULTRASONIC_PIN, LOW);
+  digitalWrite(SOLENOID_PIN, LOW);
+
+  Serial.begin(9600);
+  Serial.println("Pest control system initialized.");
+}
+
+void loop() {
+  int pirState = digitalRead(PIR_PIN);
+
+  if (pirState == HIGH) {
+    Serial.println("Pest detected!");
+    digitalWrite(ULTRASONIC_PIN, HIGH);
+    delay(500);  // Emit ultrasonic for 0.5s
+    digitalWrite(ULTRASONIC_PIN, LOW);
+    digitalWrite(SOLENOID_PIN, HIGH);
+    delay(1000);  // Release gas for 1s
+    digitalWrite(SOLENOID_PIN, LOW);
+    delay(2000);  // Cooldown period
+  }
+}
 
